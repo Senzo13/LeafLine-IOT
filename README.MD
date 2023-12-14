@@ -27,6 +27,8 @@ Bienvenue dans la partie IoT du projet LeafLine !
 
 ## 📚 Bibliothèques utilisées
 
+Adafruit_sensor (à ajouté en .zip dans librairy sur Arduino) https://www-arduinolibraries-info.translate.goog/libraries/adafruit-unified-sensor?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr&_x_tr_pto=sc
+DHT (à ajouté en .zip dans librairy sur Arduino) https://www.arduinolibraries.info/libraries/dht-sensor-library
 `#include "LiquidCrystal.h"` ➤ Pour l'affichage sur écran LCD<br/>
 `#include "Measurement.h"` ➤ Une classe personnalisée pour gérer et traiter les données des capteurs<br/>
 `#include <WiFiEsp.h> ` ➤ Gère la connectivité Wi-Fi de l'Arduino<br/>

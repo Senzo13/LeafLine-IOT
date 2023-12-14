@@ -1,6 +1,6 @@
 #include "LiquidCrystal.h"
 #include "Measurement.h"    // inclusion de la classe Measurement
-#include <WiFiEsp.h>
+// #include <WiFiEsp.h>
 #include <DHT.h>
 
 // Définir le pin de données du capteur DHT11
