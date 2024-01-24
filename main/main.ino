@@ -1,10 +1,10 @@
-#include "LiquidCrystal.h"
+// #include "LiquidCrystal.h"
 #include "Measurement.h"    // inclusion de la classe Measurement
 // #include <WiFiEsp.h>
 #include <DHT.h>
 
 // Définir le pin de données du capteur DHT11
-#define DHTPIN 2
+#define DHTPIN 4
 // Définir le type de capteur DHT11
 #define DHTTYPE DHT11
 // Initialiser le capteur DHT11
@@ -22,21 +22,21 @@ DHT dht(DHTPIN, DHTTYPE);
 // WiFiEspServer server(80);
 
 // Vérifiez les broches !
-LiquidCrystal lcd(11,10,9,8,7,6,5,4,3,2); // liaison 8 bits de données (commentée car vous avez choisi 4 bits)
+// LiquidCrystal lcd(11,10,9,8,7,6,5,4,3,2); // liaison 8 bits de données (commentée car vous avez choisi 4 bits)
 // LiquidCrystal lcd(11,10,5,4,3,2); // liaison 4 bits de données
 
 Measurement measurement;          // créer une instance de la classe Measurement
 
 void setup() {
-
-  Serial.begin(9600);
- // Initialiser le capteur DHT11
   dht.begin();
+
+  Serial.begin(115200);
+ // Initialiser le capteur DHT11
   //Init la wifi
   // wifiInit();
 
  //- - - - - - - - - - - - - - - -
-  delay(1000);
+  // delay(1000);
   Serial.println("🌱 LeafLine sensor 🌱");
   Serial.println("⏳ Initializing ⏳");
   delay(2000);
@@ -62,33 +62,52 @@ void setup() {
 // }
 
 void loop() {
+  Serial.println("BONJOUR");
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  float h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  float t = dht.readTemperature();
+
+    float f = dht.readTemperature(true);
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(h) || isnan(t) || isnan(f)) {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return;
+  }
+
+  Serial.print(F("Humidity: "));
+  Serial.print(h);
+  Serial.print(F("%  Temperature: "));
+  Serial.print(t);
+  Serial.print(F("°C "));
+  Serial.println(F("°F"));
+
   float moisture = measurement.getSoilMoisture();
   float luminosity = measurement.getLuminosity();
-  float temperature = dht.readTemperature();
-  float airHumidity = dht.readHumidity();
   
   String moistureStatus = moisture > 80 ? "🌊" : moisture > 40 ? "💧" : "🏜️";
   String lightStatus = luminosity > 80 ? "☀️" : luminosity > 40 ? "🌥️" : "🌚";
   
   // Pour l'humidité de l'air
-  String airHumidityStatus = airHumidity > 80 ? "🌧️" : airHumidity > 40 ? "💧" : "🏜️";
+  // String airHumidityStatus = airHumidity > 80 ? "🌧️" : airHumidity > 40 ? "💧" : "🏜️";
   
-  // Pour la température
-  String temperatureStatus;
-  if (temperature > 30) {
-    temperatureStatus = "🔥";
-  } else if (temperature > 15) {
-    temperatureStatus = "🌡️";
-  } else {
-    temperatureStatus = "❄️";
-  }
+  // // Pour la température
+  // String temperatureStatus;
+  // if (temperature > 30) {
+  //   temperatureStatus = "🔥";
+  // } else if (temperature > 15) {
+  //   temperatureStatus = "🌡️";
+  // } else {
+  //   temperatureStatus = "❄️";
+  // }
 
   Serial.println("Soil moisture " + moistureStatus + ": " + String(moisture, 2) + " %");
   Serial.println("Luminosity    " + lightStatus + ": " + String(luminosity, 2) + " %");
-  Serial.println("Air humidity  " + airHumidityStatus + ": " + String(airHumidity, 2) + " %");
-  Serial.println("Temperature   " + temperatureStatus + ": " + String(temperature, 2) + " °C");
+  // Serial.println("Air humidity  " + airHumidityStatus + ": " + String(airHumidity, 2) + " %");
+  // Serial.println("Temperature   " + temperatureStatus + ": " + String(temperature, 2) + " °C");
 
-  Serial.println("-----------------------------------------");
+  // Serial.println("-----------------------------------------");
 
   // handleClientRequests();
 }
