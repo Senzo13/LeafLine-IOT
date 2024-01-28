@@ -1,8 +1,8 @@
 #include "Measurement.h"
 #include <Arduino.h>
 
-const int soilMoisturePin = 0;  // Déclaration de la broche à l'intérieur du fichier .cpp pour éviter les conflits
-const int luminosityPin = 2;    // Déclaration de la broche à l'intérieur du fichier .cpp pour éviter les conflits
+const int soilMoisturePin = 27;  // Déclaration de la broche à l'intérieur du fichier .cpp pour éviter les conflits
+const int luminosityPin = 33;    // Déclaration de la broche à l'intérieur du fichier .cpp pour éviter les conflits
 
  Measurement::Measurement() {
      // Initialisation, si nécessaire

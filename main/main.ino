@@ -1,22 +1,23 @@
 #include <WiFi.h>
 #include <DHT.h>
 #include "Measurement.h"
+#include <HTTPClient.h>
 
 #define DHTPIN 4
 #define DHTTYPE DHT11
 
 DHT dht(DHTPIN, DHTTYPE);
-// Configuration du WiFi
-const char* ssid = "Donne internet enculey"; // votre SSID réseau (nom)
-const char* password = "mdpsimple"; // votre mot de passe réseau
+const char* ssid = "Donne internet enculey"; // Votre SSID
+const char* password = "mdpsimple";  // Votre mot de passe
 WiFiServer server(80);
 Measurement measurement;
+HTTPClient http;
 
 void setup() {
   dht.begin();
   Serial.begin(115200);
   delay(1000);
-  setupWiFi(); // Configuration et connexion au WiFi
+  setupWiFi(); 
   Serial.println("🌱 LeafLine sensor 🌱");
   Serial.println("⏳ Initializing ⏳");
   delay(2000);
@@ -24,8 +25,9 @@ void setup() {
 }
 
 void loop() {
-  handleClient(); // Gestion des clients WiFi
-  readSensors();  // Lecture des données des capteurs
+  handleClient();
+  readSensors();
+  delay(2000); // Attendre 10 secondes entre les lectures
 }
 
 void setupWiFi() {
@@ -36,10 +38,10 @@ void setupWiFi() {
     Serial.print(".");
     delay(100);
   }
-  Serial.print("\nConnected to WiFi");
-  Serial.print(ssid);
-  Serial.println("\n");
-  Serial.print("Local ESP32 IP: ");
+  Serial.println("\nConnected to WiFi");
+  Serial.println(ssid);
+  Serial.println();
+  Serial.println("Local ESP32 IP: ");
   Serial.println(WiFi.localIP());
   server.begin();
   Serial.println("Server started");
@@ -48,19 +50,17 @@ void setupWiFi() {
 void readSensors() {
   float h = dht.readHumidity();
   float t = dht.readTemperature();
-  float f = dht.readTemperature(true);
-
-  if (isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
     return;
   }
 
-  Serial.print(F("Humidity: "));
-  Serial.print(h);
-  Serial.print(F("%  Temperature: "));
-  Serial.print(t);
-  Serial.print(F("°C "));
-  Serial.println(F("°F"));
+  Serial.print("Humidity: ");
+  Serial.print(h, 1);
+  Serial.println("%");
+  Serial.print("Temperature: ");
+  Serial.print(t, 1);
+  Serial.println("°C");
 
   float moisture = measurement.getSoilMoisture();
   float luminosity = measurement.getLuminosity();
@@ -68,36 +68,74 @@ void readSensors() {
   String lightStatus = luminosity > 80 ? "☀️" : luminosity > 40 ? "🌥️" : "🌚";
   Serial.println("Humidité du sol " + moistureStatus + ": " + String(moisture, 2) + " %");
   Serial.println("Luminosité    " + lightStatus + ": " + String(luminosity, 2) + " %");
+  Serial.println("-----------------------------------------");
+
+  // getData("temperatures"); // Requête GET pour tester
+  // getData(""); // Requête GET pour tester
+  patchData("temperatures/6578ef699a9f996a03718f7f/add", t); // Requête PATCH
+  patchData("sunshineData/6578ef6a9a9f996a037199a8/add", luminosity);
+  patchData("airHumidityData/6578ef699a9f996a03717104/add", h);
+  patchData("soilHumidityData/6578ef699a9f996a03717b2d/add", moisture);
+}
+
+void getData(const char* path) {
+  if(WiFi.status() == WL_CONNECTED) {
+    String serverPath = "http://172.20.10.4:3000/api/";
+    serverPath += path;
+
+    http.begin(serverPath);
+    int httpResponseCode = http.GET();
+
+    if(httpResponseCode > 0) {
+      String payload = http.getString();
+      Serial.println("GET response: ");
+      Serial.println(payload);
+    } else {
+      Serial.print("Error on sending GET request: ");
+      Serial.println(http.errorToString(httpResponseCode));
+    }
+
+    http.end();
+  } else {
+    Serial.println("Error in WiFi connection");
+  }
+}
+
+void patchData(const char* path, float data) {
+  if(WiFi.status() == WL_CONNECTED) {
+    String serverPath = "http://172.20.10.4:3000/api/";
+    serverPath += path;
+
+    http.begin(serverPath);
+    http.addHeader("Content-Type", "application/json");
+
+    String httpRequestData = "{\"value\":" + String(data) + "}";
+    int httpResponseCode = http.PATCH(httpRequestData);
+
+    if(httpResponseCode > 0) {
+      String response = http.getString();
+      Serial.println("PATCH response: ");
+      Serial.println(response);
+    } else {
+      Serial.print("Error on sending PATCH request: ");
+      Serial.println(http.errorToString(httpResponseCode));
+    }
+
+    http.end();
+  } else {
+    Serial.println("Error in WiFi connection");
+  }
 }
 
 void handleClient() {
   WiFiClient client = server.available();
-  if (!client) {
-    return;
-  }
+  if (!client) return;
 
-  Serial.println("New Client.");
-  String currentLine = "";
   while (client.connected()) {
     if (client.available()) {
-      char c = client.read();
-      if (c == '\n') {
-        if (currentLine.length() == 0) {
-          client.println("HTTP/1.1 200 OK");
-          client.println("Content-type:text/html");
-          client.println();
-          client.print("GET /H turns something on.<br>");
-          client.print("GET /L turns something off.<br>");
-          client.println();
-          break;
-        } else {
-          currentLine = "";
-        }
-      } else if (c != '\r') {
-        currentLine += c;
-      }
+      client.readStringUntil('\r');
+      client.flush();
     }
   }
   client.stop();
-  Serial.println("Client Disconnected.");
 }
