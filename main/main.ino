@@ -27,7 +27,7 @@ void setup() {
 void loop() {
   handleClient();
   readSensors();
-  delay(2000); // Attendre 10 secondes entre les lectures
+  delay(100); // Attendre 0.1 secondes entre les lectures
 }
 
 void setupWiFi() {
