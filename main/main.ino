@@ -27,7 +27,7 @@ void setup() {
 void loop() {
   handleClient();
   readSensors();
-  delay(100); // Attendre 0.1 secondes entre les lectures
+  delay(100); // Attendre 1 secondes entre les lectures
 }
 
 void setupWiFi() {
@@ -72,15 +72,15 @@ void readSensors() {
 
   // getData("temperatures"); // Requête GET pour tester
   // getData(""); // Requête GET pour tester
-  patchData("temperatures/6578ef699a9f996a03718f7f/add", t); // Requête PATCH
-  patchData("sunshineData/6578ef6a9a9f996a037199a8/add", luminosity);
-  patchData("airHumidityData/6578ef699a9f996a03717104/add", h);
-  patchData("soilHumidityData/6578ef699a9f996a03717b2d/add", moisture);
+  patchData("sunshineData/65b958ccc8f6cb4a4f0f365d/add", luminosity);
+  patchData("temperatures/65b958cbc8f6cb4a4f0f2c34/add", t); // Requête PATCH
+  patchData("airHumidityData/65b958cac8f6cb4a4f0f0db9/add", h);
+  // patchData("soilHumidityData/65b958cbc8f6cb4a4f0f17e2/add", moisture);
 }
 
 void getData(const char* path) {
   if(WiFi.status() == WL_CONNECTED) {
-    String serverPath = "http://172.20.10.4:3000/api/";
+    String serverPath = "https://leafline.ddns.net/";
     serverPath += path;
 
     http.begin(serverPath);
@@ -103,7 +103,7 @@ void getData(const char* path) {
 
 void patchData(const char* path, float data) {
   if(WiFi.status() == WL_CONNECTED) {
-    String serverPath = "http://172.20.10.4:3000/api/";
+    String serverPath = "https://leafline.ddns.net/";
     serverPath += path;
 
     http.begin(serverPath);

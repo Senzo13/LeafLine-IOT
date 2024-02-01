@@ -5,7 +5,7 @@
  </div>
 
 ## 🔬 Description
-
+https://dl.espressif.com/dl/package_esp32_index.json
 Bienvenue dans la partie IoT du projet LeafLine !
 
 <p>Avec l'aide du kit <b>ELEGOO UNO R3</b>, nous surveillons et <br/>recueillons des informations vitales pour la croissance des plantes.<p>
