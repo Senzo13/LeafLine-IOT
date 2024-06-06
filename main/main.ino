@@ -70,54 +70,29 @@ void readSensors() {
   Serial.println("Luminosité    " + lightStatus + ": " + String(luminosity, 2) + " %");
   Serial.println("-----------------------------------------");
 
-  // getData("temperatures"); // Requête GET pour tester
-  // getData(""); // Requête GET pour tester
-  patchData("sunshineData/65b958ccc8f6cb4a4f0f365d/add", luminosity);
-  patchData("temperatures/65b958cbc8f6cb4a4f0f2c34/add", t); // Requête PATCH
-  patchData("airHumidityData/65b958cac8f6cb4a4f0f0db9/add", h);
-  // patchData("soilHumidityData/65b958cbc8f6cb4a4f0f17e2/add", moisture);
+  sendData(t, h, luminosity, moisture); // Envoie des données via POST
 }
 
-void getData(const char* path) {
+void sendData(float temp, float humidity, float luminosity, float soilMoisture) {
   if(WiFi.status() == WL_CONNECTED) {
-    String serverPath = "https://leafline.ddns.net/";
-    serverPath += path;
-
-    http.begin(serverPath);
-    int httpResponseCode = http.GET();
-
-    if(httpResponseCode > 0) {
-      String payload = http.getString();
-      Serial.println("GET response: ");
-      Serial.println(payload);
-    } else {
-      Serial.print("Error on sending GET request: ");
-      Serial.println(http.errorToString(httpResponseCode));
-    }
-
-    http.end();
-  } else {
-    Serial.println("Error in WiFi connection");
-  }
-}
-
-void patchData(const char* path, float data) {
-  if(WiFi.status() == WL_CONNECTED) {
-    String serverPath = "https://leafline.ddns.net/";
-    serverPath += path;
+    String serverPath = "https://server.leafline.me/sensors/captor/10";
 
     http.begin(serverPath);
     http.addHeader("Content-Type", "application/json");
 
-    String httpRequestData = "{\"value\":" + String(data) + "}";
-    int httpResponseCode = http.PATCH(httpRequestData);
+    String httpRequestData = "{\"temperature\":" + String(temp) +
+                             ",\"airHumidity\":" + String(humidity) +
+                             ",\"luminosity\":" + String(luminosity) +
+                             ",\"soilMoisture\":" + String(soilMoisture) + "}";
+                             
+    int httpResponseCode = http.POST(httpRequestData);
 
     if(httpResponseCode > 0) {
       String response = http.getString();
-      Serial.println("PATCH response: ");
+      Serial.println("POST response: ");
       Serial.println(response);
     } else {
-      Serial.print("Error on sending PATCH request: ");
+      Serial.print("Error on sending POST request: ");
       Serial.println(http.errorToString(httpResponseCode));
     }
 
